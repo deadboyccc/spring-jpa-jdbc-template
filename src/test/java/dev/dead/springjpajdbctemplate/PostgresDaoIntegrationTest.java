@@ -1,7 +1,10 @@
 package dev.dead.springjpajdbctemplate;
 
+import dev.dead.springjpajdbctemplate.dao.AuthorDao;
+import dev.dead.springjpajdbctemplate.dao.AuthorDaoImpl;
 import dev.dead.springjpajdbctemplate.dao.BookDao;
 import dev.dead.springjpajdbctemplate.dao.BookDaoImpl;
+import dev.dead.springjpajdbctemplate.domain.Author;
 import dev.dead.springjpajdbctemplate.domain.Book;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -15,12 +18,16 @@ import org.springframework.test.annotation.Rollback;
 import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
-@Import(BookDaoImpl.class)
+@Import({BookDaoImpl.class, AuthorDaoImpl.class})
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 public class PostgresDaoIntegrationTest {
     private static final Logger log = LoggerFactory.getLogger(PostgresDaoIntegrationTest.class);
+
     @Autowired
     BookDao bookDao;
+
+    @Autowired
+    AuthorDao authorDao;
 
     @Test
     void BeanRegisterationTest() {
@@ -68,6 +75,80 @@ public class PostgresDaoIntegrationTest {
         bookDao.deleteBookById(1L);
         assertThrows(RuntimeException.class,
                 () -> bookDao.getById(1L)
+                        .orElse(null));
+    }
+
+    // Author Tests
+
+    @Test
+    void testAuthorBeanRegistration() {
+        assertNotNull(authorDao);
+    }
+
+    @Test
+    void testGetAuthorById() {
+        Author author = authorDao.getById(1L)
+                .orElse(null);
+        log.debug("Found author: {}", author);
+        assertNotNull(author);
+    }
+
+    @Test
+    void testCreateAuthor() {
+        Author author = new Author("Test First", "Test Last");
+
+        var returned = authorDao.saveNewAuthor(author);
+        assertNotNull(returned);
+        assertNotNull(returned.getId());
+        assertEquals(author.getFirstName(), returned.getFirstName());
+        assertEquals(author.getLastName(), returned.getLastName());
+
+        log.debug("Created author: {}", returned);
+    }
+
+    @Test
+    void testFindAuthorByName() {
+        // First create an author with known name
+        Author newAuthor = new Author("John", "Doe");
+        var savedAuthor = authorDao.saveNewAuthor(newAuthor);
+        assertNotNull(savedAuthor.getId());
+
+        // Now find it by name
+        Author author = authorDao.findAuthorByName("John", "Doe")
+                .orElse(null);
+        log.debug("Found author by name: {}", author);
+        assertNotNull(author);
+        assertEquals("John", author.getFirstName());
+        assertEquals("Doe", author.getLastName());
+    }
+
+    @Test
+    void testUpdateAuthor() {
+        Author author = authorDao.getById(1L)
+                .orElse(null);
+        assertNotNull(author);
+        author.setFirstName("Updated First");
+        author.setLastName("Updated Last");
+
+        var updatedAuthor = authorDao.updateAuthor(author);
+        assertNotNull(updatedAuthor);
+        assertEquals(author.getFirstName(), updatedAuthor.getFirstName());
+        assertEquals(author.getLastName(), updatedAuthor.getLastName());
+        log.debug("Updated author: {}", updatedAuthor);
+    }
+
+    @Test
+    void testDeleteAuthorById() {
+        // Create an author without any books referencing it
+        Author newAuthor = new Author("Delete", "Me");
+        var savedAuthor = authorDao.saveNewAuthor(newAuthor);
+        Long authorId = savedAuthor.getId();
+        assertNotNull(authorId);
+
+        // Now delete it
+        authorDao.deleteAuthorById(authorId);
+        assertThrows(RuntimeException.class,
+                () -> authorDao.getById(authorId)
                         .orElse(null));
     }
 }
