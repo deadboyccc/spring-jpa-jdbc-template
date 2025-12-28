@@ -35,22 +35,29 @@ public class BookDaoImpl implements BookDao {
 
     @Override
     public Book saveNewBook(Book book) {
-
-        jdbcTemplate.update("INSERT INTO BOOK (TITLE, ISBN, PUBLISHER)" +
-                        " VALUES (?, ?, ?)", book.getTitle(), book.getIsbn(),
-                book.getPublisher());
-        return this.getById(book.getId())
-                .orElse(null);
-
+        Long generatedId = jdbcTemplate.queryForObject(
+                "INSERT INTO BOOK (TITLE, ISBN, PUBLISHER) VALUES (?, ?, ?) RETURNING ID",
+                Long.class,
+                book.getTitle(),
+                book.getIsbn(),
+                book.getPublisher()
+        );
+        book.setId(generatedId);
+        return book;
     }
 
     @Override
     public Book updateBook(Book book) {
-        return null;
+        jdbcTemplate.update("UPDATE BOOK SET TITLE = ?, ISBN = ?, PUBLISHER = ? WHERE ID = ?"
+                , book.getTitle(), book.getIsbn(), book.getPublisher(), book.getId());
+        return this.getById(book.getId())
+                .orElse(null);
     }
 
     @Override
     public void deleteBookById(Long id) {
+        jdbcTemplate.update("DELETE FROM BOOK WHERE ID = ?", id);
+
 
     }
 }
