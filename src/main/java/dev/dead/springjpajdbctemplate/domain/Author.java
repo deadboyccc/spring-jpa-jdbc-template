@@ -1,10 +1,8 @@
 package dev.dead.springjpajdbctemplate.domain;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
+import java.util.ArrayList;
 import java.util.Objects;
 
 @Entity
@@ -17,13 +15,31 @@ public class Author {
     private String firstName;
     private String lastName;
 
+    @Transient
+    private ArrayList<Book> books = new ArrayList<>();
+
     public Author() {
 
     }
 
-    public Author(String firstName, String lastName) {
+    public Author(String firstName, String lastName, ArrayList<Book> books) {
         this.firstName = firstName;
         this.lastName = lastName;
+        this.books = books;
+    }
+
+    public Author(String testFirst, String testLast) {
+        this.firstName = testFirst;
+        this.lastName = testLast;
+    }
+
+    public ArrayList<Book> getBooks() {
+        return books;
+    }
+
+    public void setBooks(
+            ArrayList<Book> books) {
+        this.books = books;
     }
 
     @Override
