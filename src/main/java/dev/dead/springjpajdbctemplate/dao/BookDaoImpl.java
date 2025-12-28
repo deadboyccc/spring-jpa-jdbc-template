@@ -20,27 +20,33 @@ public class BookDaoImpl implements BookDao {
 
     @Override
     public Optional<Book> getById(Long id) {
-        Book result = jdbcTemplate.queryForObject("SELECT * FROM BOOK WHERE " +
-                        "ID" +
-                        " = ?",
-                bookMapper, id);
+        Book result = jdbcTemplate.queryForObject(
+                "SELECT * FROM BOOK WHERE ID = ?",
+                bookMapper,
+                id
+        );
         return Optional.ofNullable(result);
     }
 
     @Override
     public Optional<Book> findBookByTitle(String title) {
-        Book result = jdbcTemplate.queryForObject("select * from book where title = ?", bookMapper, title);
+        Book result = jdbcTemplate.queryForObject(
+                "SELECT * FROM BOOK WHERE TITLE = ?",
+                bookMapper,
+                title
+        );
         return Optional.ofNullable(result);
     }
 
     @Override
     public Book saveNewBook(Book book) {
         Long generatedId = jdbcTemplate.queryForObject(
-                "INSERT INTO BOOK (TITLE, ISBN, PUBLISHER) VALUES (?, ?, ?) RETURNING ID",
+                "INSERT INTO BOOK (TITLE, ISBN, PUBLISHER, AUTHOR_ID) VALUES (?, ?, ?, ?) RETURNING ID",
                 Long.class,
                 book.getTitle(),
                 book.getIsbn(),
-                book.getPublisher()
+                book.getPublisher(),
+                book.getAuthorId()
         );
         book.setId(generatedId);
         return book;
@@ -48,8 +54,14 @@ public class BookDaoImpl implements BookDao {
 
     @Override
     public Book updateBook(Book book) {
-        jdbcTemplate.update("UPDATE BOOK SET TITLE = ?, ISBN = ?, PUBLISHER = ? WHERE ID = ?"
-                , book.getTitle(), book.getIsbn(), book.getPublisher(), book.getId());
+        jdbcTemplate.update(
+                "UPDATE BOOK SET TITLE = ?, ISBN = ?, PUBLISHER = ?, AUTHOR_ID = ? WHERE ID = ?",
+                book.getTitle(),
+                book.getIsbn(),
+                book.getPublisher(),
+                book.getAuthorId(),
+                book.getId()
+        );
         return this.getById(book.getId())
                 .orElse(null);
     }
@@ -57,7 +69,5 @@ public class BookDaoImpl implements BookDao {
     @Override
     public void deleteBookById(Long id) {
         jdbcTemplate.update("DELETE FROM BOOK WHERE ID = ?", id);
-
-
     }
 }
