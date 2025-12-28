@@ -151,4 +151,28 @@ public class PostgresDaoIntegrationTest {
                 () -> authorDao.getById(authorId)
                         .orElse(null));
     }
+
+    // join table tests
+
+
+    @Test
+    void createBookAndsetAuthor() {
+        Book book = new Book();
+        book.setPublisher("Test Publisher");
+        book.setTitle("Test Title");
+        book.setIsbn("12341241");
+
+        Author author = new Author("Test First", "Test Last");
+        authorDao.saveNewAuthor(author);
+
+        book.setAuthorId(author.getId());
+
+        bookDao.saveNewBook(book);
+        log.debug("Created book: {}", book);
+        log.debug("Created author: {}", author);
+        assertNotNull(book.getId());
+        assertNotNull(book.getAuthorId());
+        assertEquals(author.getId(), book.getAuthorId());
+
+    }
 }
