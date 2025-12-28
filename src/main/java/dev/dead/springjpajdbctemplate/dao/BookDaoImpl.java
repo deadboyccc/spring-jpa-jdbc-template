@@ -29,12 +29,19 @@ public class BookDaoImpl implements BookDao {
 
     @Override
     public Optional<Book> findBookByTitle(String title) {
-        return Optional.empty();
+        Book result = jdbcTemplate.queryForObject("select * from book where title = ?", bookMapper, title);
+        return Optional.ofNullable(result);
     }
 
     @Override
     public Book saveNewBook(Book book) {
-        return null;
+
+        jdbcTemplate.update("INSERT INTO BOOK (TITLE, ISBN, PUBLISHER)" +
+                        " VALUES (?, ?, ?)", book.getTitle(), book.getIsbn(),
+                book.getPublisher());
+        return this.getById(book.getId())
+                .orElse(null);
+
     }
 
     @Override
